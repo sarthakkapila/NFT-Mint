@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
-
+import { ethers, BrowserProvider } from "ethers";
+import NFT from '../../../artifacts/contracts/horoscopeNFT.sol/horoscopeNFT.json';
 export default function Home() {
   const [walletExtension, setWalletExtension] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
@@ -10,7 +10,9 @@ export default function Home() {
   const [isMinting, setIsMinting] = useState(false);
   const [date, setDate] = useState("2000-05-27");
   const [zodiac, setZodiac] = useState("Gemini")
+  const [NFTContract, setNFTContract] = useState(null);
 
+  const NFT_CONTRACT_ADDRESS = "0xCa938303355F4D2391713BAab2C8850879Cde678";
   useEffect(() => {
     if ((window as any).ethereum) {
       setWalletExtension(true);
@@ -33,6 +35,35 @@ export default function Home() {
     calculateZodiacSign(date);
   }, [date]);
 
+
+  useEffect(() => {
+    function initNFTContract() {
+      const provider = new BrowserProvider((window as any).ethereum);
+      provider.getSigner().then((signer) => {
+        setNFTContract(new Contract(NFT_CONTRACT_ADDRESS, NFT.abi, signer));
+      }).catch((error: Error) => {
+        console.error("Error initializing contract:", error);
+      });
+    }
+    initNFTContract();
+  }, [account]);
+
+  async function mintNFT() {
+    setIsMinting(true);
+    try {
+      const transaction = await NFTContract.mintNFT(account, zodiac);
+
+      // Wait for the transaction to be confirmed
+      await transaction.wait();
+
+      // Transaction is confirmed, you can perform any additional actions here if needed
+    } catch (e) {
+      console.error(e);
+    } finally {
+      alert("Minting Successful")
+      setIsMinting(false);
+    }
+  }
 
   function calculateZodiacSign(date: string) {
     let dateObject = new Date(date);
@@ -116,55 +147,67 @@ export default function Home() {
   function handleDateInput({ target }: any) {
     setDate(target.value);
   }
+
   return (
-    <div className="container mx-auto p-4 text-center">
-      <h1 className="font-bold text-5xl text-center mb-8">Horoscope Minting DAPP</h1>
-      {!walletExtension ? (
-        <p className="text-center text-red-500">Please install a wallet extension like MetaMask.</p>
-      ) : !account ? (
-        <button
-          onClick={connectWallet}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex justify-center"
-        >
-          Connect Wallet
-        </button>
-      ) : (
-
-        <div>
-          <p className="text-center">Connected: {account}</p>
-
-          <input onChange={handleDateInput} value={date} type="date" id="dob" />
-
-          {zodiac ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="xMinYMin meet"
-              viewBox="0 0 300 300"
-              width="400px"
-              height="400px"
-            >
-              <style>{`.base { fill: white; font-family: serif; font-size: 24px;`}</style>
-              <rect width="100%" height="100%" fill="black" />
-              <text
-                x="50%"
-                y="50%"
-                class="base"
-                dominant-baseline="middle"
-                text-anchor="middle"
-              >
-                {zodiac}
-              </text>
-            </svg>
-          ) : null}
-
-          <br />
-          <br />
-          <button disabled={isMinting} onClick={mintNFT}>
-            {isMinting ? "Minting..." : "Mint"}
+    <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+      <div className="container mx-auto p-8 text-center bg-gray-900 rounded-lg shadow-lg">
+        <h1 className="font-bold text-5xl text-white mb-8">Horoscope Minting DAPP</h1>
+        {!walletExtension ? (
+          <p className="text-red-500">Please install a wallet extension like MetaMask.</p>
+        ) : !account ? (
+          <button
+            onClick={connectWallet}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition duration-300"
+          >
+            Connect Wallet
           </button>
-        </div>
-      )}
-      {error && <p className="text-center text-red-500 mt-4">{error}</p>}
+        ) : (
+          <div className="space-y-4">
+            <p className="text-gray-300">Connected: {account}</p>
+
+            <input
+              onChange={handleDateInput}
+              value={date}
+              type="date"
+              id="dob"
+              className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {zodiac ? (
+              <div className="flex justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="xMinYMin meet"
+                  viewBox="0 0 300 300"
+                  width="300px"
+                  height="300px"
+                >
+                  <style>{`.base { fill: white; font-family: serif; font-size: 24px; }`}</style>
+                  <rect width="100%" height="100%" fill="black" />
+                  <text
+                    x="50%"
+                    y="50%"
+                    className="base"
+                    dominantBaseline="middle"
+                    textAnchor="middle"
+                  >
+                    {zodiac}
+                  </text>
+                </svg>
+              </div>
+            ) : null}
+
+            <button
+              disabled={isMinting}
+              onClick={mintNFT}
+              className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition duration-300 ${isMinting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isMinting ? "Minting..." : "Mint"}
+            </button>
+          </div>
+        )}
+        {error && <p className="text-red-500 mt-4">{error}</p>}
+      </div>
     </div>
   );
 }
