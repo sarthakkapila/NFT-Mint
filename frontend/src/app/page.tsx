@@ -1,18 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { ethers, BrowserProvider } from "ethers";
-import NFT from '../../../artifacts/contracts/horoscopeNFT.sol/horoscopeNFT.json';
+import { ethers, BrowserProvider, Contract } from "ethers";
+import NFT from '../abi/horoscopeNFT.json';
+
 export default function Home() {
   const [walletExtension, setWalletExtension] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isMinting, setIsMinting] = useState(false);
   const [date, setDate] = useState("2000-05-27");
-  const [zodiac, setZodiac] = useState("Gemini")
-  const [NFTContract, setNFTContract] = useState(null);
+  const [zodiac, setZodiac] = useState("Gemini");
+  const [NFTContract, setNFTContract] = useState<Contract | null>(null);
 
-  const NFT_CONTRACT_ADDRESS = "0xCa938303355F4D2391713BAab2C8850879Cde678";
+  const NFT_CONTRACT_ADDRESS = "0x5c512A1eaF19a7A55909F6749345152f58B46d17";
+
   useEffect(() => {
     if ((window as any).ethereum) {
       setWalletExtension(true);
@@ -31,24 +33,32 @@ export default function Home() {
       setError("Failed to connect wallet. Please try again.");
     }
   }
+
   useEffect(() => {
     calculateZodiacSign(date);
   }, [date]);
 
-
   useEffect(() => {
     function initNFTContract() {
-      const provider = new BrowserProvider((window as any).ethereum);
-      provider.getSigner().then((signer) => {
-        setNFTContract(new Contract(NFT_CONTRACT_ADDRESS, NFT.abi, signer));
-      }).catch((error: Error) => {
-        console.error("Error initializing contract:", error);
-      });
+      if (account) {
+        const provider = new BrowserProvider((window as any).ethereum);
+        provider.getSigner().then((signer) => {
+          const contract = new Contract(NFT_CONTRACT_ADDRESS, NFT.abi, signer);
+          setNFTContract(contract);
+        }).catch((error: Error) => {
+          console.error("Error initializing contract:", error);
+        });
+      }
     }
     initNFTContract();
   }, [account]);
 
   async function mintNFT() {
+    if (!NFTContract || !account) {
+      setError("Contract or account not initialized");
+      return;
+    }
+
     setIsMinting(true);
     try {
       const transaction = await NFTContract.mintNFT(account, zodiac);
@@ -56,11 +66,12 @@ export default function Home() {
       // Wait for the transaction to be confirmed
       await transaction.wait();
 
-      // Transaction is confirmed, you can perform any additional actions here if needed
+      // Transaction is confirmed
+      alert("Minting Successful");
     } catch (e) {
       console.error(e);
+      setError("Minting failed. Please try again.");
     } finally {
-      alert("Minting Successful")
       setIsMinting(false);
     }
   }
@@ -69,73 +80,73 @@ export default function Home() {
     let dateObject = new Date(date);
     let day = dateObject.getDate();
     let month = dateObject.getMonth();
-    if (month == 0) {
+    if (month === 0) {
       if (day >= 20) {
         setZodiac("Aquarius");
       } else {
         setZodiac("Capricorn");
       }
-    } else if (month == 1) {
+    } else if (month === 1) {
       if (day >= 19) {
         setZodiac("Pisces");
       } else {
         setZodiac("Aquarius");
       }
-    } else if (month == 2) {
+    } else if (month === 2) {
       if (day >= 21) {
         setZodiac("Aries");
       } else {
         setZodiac("Pisces");
       }
-    } else if (month == 3) {
+    } else if (month === 3) {
       if (day >= 20) {
         setZodiac("Taurus");
       } else {
         setZodiac("Aries");
       }
-    } else if (month == 4) {
+    } else if (month === 4) {
       if (day >= 21) {
         setZodiac("Gemini");
       } else {
         setZodiac("Taurus");
       }
-    } else if (month == 5) {
+    } else if (month === 5) {
       if (day >= 21) {
         setZodiac("Cancer");
       } else {
         setZodiac("Gemini");
       }
-    } else if (month == 6) {
+    } else if (month === 6) {
       if (day >= 23) {
         setZodiac("Leo");
       } else {
         setZodiac("Cancer");
       }
-    } else if (month == 7) {
+    } else if (month === 7) {
       if (day >= 23) {
         setZodiac("Virgo");
       } else {
         setZodiac("Leo");
       }
-    } else if (month == 8) {
+    } else if (month === 8) {
       if (day >= 23) {
         setZodiac("Libra");
       } else {
         setZodiac("Virgo");
       }
-    } else if (month == 9) {
+    } else if (month === 9) {
       if (day >= 23) {
         setZodiac("Scorpio");
       } else {
         setZodiac("Libra");
       }
-    } else if (month == 10) {
+    } else if (month === 10) {
       if (day >= 22) {
         setZodiac("Sagittarius");
       } else {
         setZodiac("Scorpio");
       }
-    } else if (month == 11) {
+    } else if (month === 11) {
       if (day >= 22) {
         setZodiac("Capricorn");
       } else {
@@ -211,3 +222,4 @@ export default function Home() {
     </div>
   );
 }
+
