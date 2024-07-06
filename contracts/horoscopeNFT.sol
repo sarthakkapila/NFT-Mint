@@ -18,11 +18,13 @@ contract horoscopeNFT is ERC721URIStorage {
         returns (uint256)
     {
         _tokenIds += 1;
-        
+       
+        // concat the svg 
         string memory finalSvg = string(
             abi.encodePacked(baseSvg, zodiacSign, "</text></svg>")
         );
 
+        // JSON structure
         string memory json = Base64.encode(
             bytes(
                 string(

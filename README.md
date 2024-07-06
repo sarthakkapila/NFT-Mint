@@ -1,13 +1,14 @@
-# Sample Hardhat Project
+# Horoscope NFT Mint
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+Simple NFT mint app
 
-Try running some of the following tasks:
+- Connect your wallet 
+- Enter your birthday 
+- Get a ZodiacSign NFT :)
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+## What all I learned while making this?
+
+- Writing an ERC721 contract & Minting an NFT
+- Using Devnet, Testnet
+- Connecting MetaMask with your website
+- Writing frontend that interacts with deployed contracts
