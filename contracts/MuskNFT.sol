@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+//  SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.8.20;
 
@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 // Give another 5% to PlantTrees fund
 contract MuskNFT {
   address public minter;
-  address public ElonMusk=0x9a96B40ffE1Fbb5734AbE92400f256b3DBaDa202;   // Using the address of my Phantom wallet here
+  address public ElonMusk=0xF6490d8da3f6Fe027018A01F61eF71f8D69519E4;   // Using the address of my Metamask wallet here
   uint public MuskPercent = 5;
 
   string[] public quotes;
@@ -33,7 +33,33 @@ contract MuskNFT {
   public 
   returns(uint256)
   {
-
+    _tokenIds += 1;
+       
+    // concat the svg 
+    string memory finalSvg = string(
+      abi.encodePacked(baseSvg, quotes[Choice], "</text></svg>")
+    );
+    string json = Base64.encode(
+      bytes(
+        string(
+          abi.encodePacked(
+            '{"name": "',quotes[Choice],
+            '", "description": "On-chain Quote NFTs", "attributes": [{"trait_type": "Quote", "value": "',
+            quotes[Choice],
+            '"}], "image": "data:image/svg+xml;base64,',
+            Base64.encode(bytes(finalSvg)),
+            '"}'
+            )
+          )
+        )
+      );
+    string memory finalTokenUri = string(
+      abi.encodePacked("data:application/json;base64,", json)
+    );
+    uint256 newItemId = _tokenIds;
+    _safeMint(minter, newItemId);
+    _setTokenURI(newItemId, finalTokenUri);
+    return newItemId;
   }
 }
 
